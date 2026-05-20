@@ -15,7 +15,11 @@ class AuthController extends GetxController {
 
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('isLogged') == true) {
+
+    // --- PERBAIKAN DI SINI ---
+    // Tambahkan pengecekan Get.currentRoute == '/login'
+    // Mencegah INFINITE LOOP agar saat di MainPage, fungsi ini tidak me-reset layar
+    if (prefs.getBool('isLogged') == true && Get.currentRoute == '/login') {
       Get.offAllNamed('/main');
     }
   }
@@ -24,16 +28,14 @@ class AuthController extends GetxController {
     if (usernameCtrl.text == 'admin' && passwordCtrl.text == 'admin') {
       isLoading.value = true;
 
-      // JEDA UNTUK UI: Beri waktu tombol merender icon loading sebelum dihantam proses navigasi
+      // JEDA UNTUK UI
       await Future.delayed(const Duration(milliseconds: 400));
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLogged', true);
 
-      // Pindah Halaman
       Get.offAllNamed('/main');
 
-      // Tampilkan Snackbar
       Future.delayed(const Duration(milliseconds: 300), () {
         Get.snackbar(
           'Success',

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'bindings/auth_binding.dart';
 import 'bindings/main_binding.dart';
+import 'services/notification_service.dart';
 import 'views/login_page.dart';
 import 'views/main_page.dart';
 import 'views/character_detail_page.dart';
@@ -10,9 +11,10 @@ import 'views/favorite_spell_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await Hive.initFlutter();
   await Hive.openBox('favorite_spells');
+  await NotificationService.init();
 
   runApp(const MyApp());
 }
@@ -25,19 +27,16 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Harry Potter App',
-      theme: ThemeData(
-        primarySwatch: Colors.pink,
-        fontFamily: 'Roboto',
-      ),
+      theme: ThemeData(primarySwatch: Colors.pink, fontFamily: 'Roboto'),
       initialRoute: '/login',
       getPages: [
         GetPage(
-          name: '/login', 
+          name: '/login',
           page: () => const LoginPage(),
           binding: AuthBinding(), // <-- Menempelkan AuthBinding disini
         ),
         GetPage(
-          name: '/main', 
+          name: '/main',
           page: () => const MainPage(),
           binding: MainBinding(), // <-- Menempelkan MainBinding disini
         ),
