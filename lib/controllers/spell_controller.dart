@@ -14,10 +14,19 @@ class SpellController extends GetxController {
 
   @override
   void onInit() {
-    favBox = Hive.box('favorite_spells');
-    fetchSpells();
-    loadFavorites();
     super.onInit();
+    favBox = Hive.box('favorite_spells');
+    // Load local data cepat, bisa taruh di onInit
+    loadFavorites();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    // Memuat data API (lambat) saat UI selesai tampil agar transisi mulus
+    Future.delayed(const Duration(milliseconds: 300), () {
+      fetchSpells();
+    });
   }
 
   Future<void> fetchSpells() async {
@@ -45,8 +54,6 @@ class SpellController extends GetxController {
   }
 
   bool isFavorite(String spellName) {
-    // Membaca dari favSpells agar setiap ada perubahan (ditambah/dihapus),
-    // UI GetX (Obx) otomatis mendeteksi dan langsung mengubah warna ikon
     return favSpells.any((spell) => spell.spellName == spellName);
   }
 

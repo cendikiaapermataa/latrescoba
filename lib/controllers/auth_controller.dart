@@ -23,13 +23,17 @@ class AuthController extends GetxController {
   Future<void> login() async {
     if (usernameCtrl.text == 'admin' && passwordCtrl.text == 'admin') {
       isLoading.value = true;
+
+      // JEDA UNTUK UI: Beri waktu tombol merender icon loading sebelum dihantam proses navigasi
+      await Future.delayed(const Duration(milliseconds: 400));
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLogged', true);
 
-      // 1. PINDAH HALAMAN DULU agar layar login dihancurkan dengan aman
+      // Pindah Halaman
       Get.offAllNamed('/main');
 
-      // 2. BERI JEDA SEDIKIT, baru tampilkan Snackbar di halaman baru
+      // Tampilkan Snackbar
       Future.delayed(const Duration(milliseconds: 300), () {
         Get.snackbar(
           'Success',
@@ -41,7 +45,7 @@ class AuthController extends GetxController {
         );
       });
 
-      return; // Wajib agar kodingan di bawahnya tidak tereksekusi
+      return;
     } else {
       Get.snackbar(
         'Failed',
@@ -52,7 +56,6 @@ class AuthController extends GetxController {
         margin: const EdgeInsets.all(12),
       );
     }
-
     isLoading.value = false;
   }
 
@@ -62,15 +65,13 @@ class AuthController extends GetxController {
     usernameCtrl.clear();
     passwordCtrl.clear();
 
-    // 1. PINDAH KE LOGIN DULU
     Get.offAllNamed('/login');
 
-    // 2. BERI JEDA SEDIKIT, baru tampilkan Snackbar
     Future.delayed(const Duration(milliseconds: 300), () {
       Get.snackbar(
         'Logout',
         'Sesi anda telah berakhir',
-        backgroundColor: Colors.grey.shade400,
+        backgroundColor: Colors.grey.shade600,
         colorText: Colors.white,
         snackPosition: SnackPosition.TOP,
         margin: const EdgeInsets.all(12),
