@@ -6,52 +6,100 @@ import '../controllers/character_controller.dart';
 import '../controllers/spell_controller.dart';
 
 class MainPage extends GetView<MainController> {
-  const MainPage({super.key});
+  const MainPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final authCtrl = Get.find<AuthController>();
-
-    // Simpan view di dalam list
-    final List<Widget> pages = [_CharacterView(), _SpellsView()];
+    final AuthController authC = Get.find();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF0F5),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
         title: Obx(
           () => Text(
             controller.currentIndex.value == 0
                 ? 'Characters'
                 : 'Spells Gallery',
-            style: TextStyle(
-              color: Colors.pink.shade800,
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
         ),
+        backgroundColor: Colors.pink[300],
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.redAccent),
-            onPressed: authCtrl.logout,
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () {
+              // ----- BAGIAN POP-UP CONFIRMATION DIALOG -----
+              Get.dialog(
+                AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                      16,
+                    ), // Sudut melengkung modern
+                  ),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  content: const Text('Apakah Anda yakin ingin logout?'),
+                  actions: [
+                    // Tombol Batal (Tidak)
+                    TextButton(
+                      onPressed: () => Get.back(), // Menutup pop-up saja
+                      child: Text(
+                        'Tidak',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    // Tombol Konfirmasi (Ya) dengan tema Pink
+                    ElevatedButton(
+                      onPressed: () {
+                        Get.back(); // Tutup pop-up dulu
+                        authC
+                            .logout(); // Jalankan fungsi logout baru pindah halaman
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.pink[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Ya',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+              // ----------------------------------------------
+            },
           ),
         ],
       ),
-      // --- REVISI DI SINI ---
-      // Menggunakan IndexedStack agar tab tidak reload (anti glitch)
       body: Obx(
-        () =>
-            IndexedStack(index: controller.currentIndex.value, children: pages),
+        () => IndexedStack(
+          index: controller.currentIndex.value,
+          children: [_CharacterListTab(), _SpellListTab()],
+        ),
       ),
-      // ----------------------
       bottomNavigationBar: Obx(
         () => BottomNavigationBar(
-          backgroundColor: Colors.white,
-          selectedItemColor: Colors.pink.shade400,
-          unselectedItemColor: Colors.grey.shade400,
           currentIndex: controller.currentIndex.value,
           onTap: controller.changeTab,
+          selectedItemColor: Colors.pink[400],
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.people),
@@ -68,52 +116,40 @@ class MainPage extends GetView<MainController> {
   }
 }
 
-class _CharacterView extends GetView<CharacterController> {
+// --- Batas Kelas Utama MainPage ---
+// Sisa kode di bawahnya (_CharacterListTab dan _SpellListTab) tetap sama persis seperti sebelumnya.
+
+class _CharacterListTab extends GetView<CharacterController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       if (controller.isLoading.value) {
-        return Center(
-          child: CircularProgressIndicator(color: Colors.pink.shade300),
-        );
+        return const Center(child: CircularProgressIndicator());
       }
       return ListView.builder(
-        padding: const EdgeInsets.all(12),
         itemCount: controller.characters.length,
         itemBuilder: (context, index) {
           final char = controller.characters[index];
           return Card(
-            elevation: 0,
-            margin: const EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            elevation: 2,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.all(12),
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  char.image.isNotEmpty
-                      ? char.image
-                      : 'https://via.placeholder.com/150',
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
-                  // Memperhalus loading gambar dari internet
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
+              leading: char.image.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        char.image,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) =>
+                            const Icon(Icons.person, size: 50),
                       ),
-                    );
-                  },
-                  errorBuilder: (c, e, s) =>
-                      const Icon(Icons.person, size: 50, color: Colors.grey),
-                ),
-              ),
+                    )
+                  : const Icon(Icons.person, size: 50, color: Colors.grey),
               title: Text(
                 char.fullName,
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -122,7 +158,7 @@ class _CharacterView extends GetView<CharacterController> {
               trailing: const Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: Colors.pinkAccent,
+                color: Colors.grey,
               ),
               onTap: () => Get.toNamed('/detail', arguments: char),
             ),
@@ -133,55 +169,48 @@ class _CharacterView extends GetView<CharacterController> {
   }
 }
 
-class _SpellsView extends GetView<SpellController> {
+class _SpellListTab extends GetView<SpellController> {
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(16.0),
           child: ElevatedButton.icon(
+            onPressed: () => Get.toNamed('/favorite'),
+            icon: const Icon(Icons.favorite, color: Colors.white),
+            label: const Text(
+              'Ke Halaman Favorite Spell',
+              style: TextStyle(color: Colors.white),
+            ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.pink.shade600,
-              elevation: 0,
+              backgroundColor: Colors.pink[400],
+              minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              minimumSize: const Size.fromHeight(50),
             ),
-            icon: const Icon(Icons.favorite),
-            label: const Text('Ke Halaman Favorite Spell'),
-            onPressed: () => Get.toNamed('/favorite'),
           ),
         ),
         Expanded(
           child: Obx(() {
-            if (controller.isLoading.value)
-              return Center(
-                child: CircularProgressIndicator(color: Colors.pink.shade300),
-              );
+            if (controller.isLoading.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
             return ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
               itemCount: controller.spells.length,
               itemBuilder: (context, index) {
                 final spell = controller.spells[index];
-
                 return Card(
-                  elevation: 0,
-                  margin: const EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  elevation: 2,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.pink.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.book, color: Colors.pink.shade300),
-                    ),
                     title: Text(
                       spell.spellName,
                       style: const TextStyle(fontWeight: FontWeight.bold),
@@ -192,7 +221,7 @@ class _SpellsView extends GetView<SpellController> {
                       return IconButton(
                         icon: Icon(
                           isFav ? Icons.favorite : Icons.favorite_border,
-                          color: isFav ? Colors.red : Colors.grey.shade400,
+                          color: isFav ? Colors.red : Colors.grey,
                         ),
                         onPressed: () => controller.toggleFavorite(spell),
                       );

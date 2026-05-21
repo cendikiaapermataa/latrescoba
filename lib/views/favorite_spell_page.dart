@@ -3,42 +3,53 @@ import 'package:get/get.dart';
 import '../controllers/spell_controller.dart';
 
 class FavoriteSpellPage extends GetView<SpellController> {
-  const FavoriteSpellPage({super.key});
+  const FavoriteSpellPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF0F5),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.pink.shade800),
-        title: Text('Favorite Spells', style: TextStyle(color: Colors.pink.shade800, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Favorite Spell',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.pink[300],
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Obx(() {
         if (controller.favSpells.isEmpty) {
-          return Center(child: Text('Belum ada sihir favorit', style: TextStyle(color: Colors.grey.shade600)));
+          return Center(
+            child: Text(
+              'Belum ada sihir favorit yang ditambahkan.',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+          );
         }
+
         return ListView.builder(
-          padding: const EdgeInsets.all(12),
           itemCount: controller.favSpells.length,
           itemBuilder: (context, index) {
             final spell = controller.favSpells[index];
+
             return Card(
-              elevation: 0,
-              margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Colors.pink.shade50, shape: BoxShape.circle),
-                  child: Icon(Icons.bookmark, color: Colors.pink.shade400),
+                title: Text(
+                  spell.spellName,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                title: Text(spell.spellName, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(spell.use),
+                // Tombol tong sampah Sesuai Poin 4 PDF
                 trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                  onPressed: () => controller.toggleFavorite(spell),
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    // Ini akan memicu hapus dari Hive + Immediate Notification
+                    controller.toggleFavorite(spell);
+                  },
                 ),
               ),
             );
